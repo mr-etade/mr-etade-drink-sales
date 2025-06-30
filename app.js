@@ -1,6 +1,6 @@
 // Global variables
 let transactions = [];
-const API_BASE_URL = 'https://your-vercel-app.vercel.app/api'; // Replace with your Vercel URL
+const API_BASE_URL = 'https://mr-etade-drink-sales.vercel.app/api'; // Replace with your Vercel URL
 
 // DOM Elements
 const transactionForm = document.getElementById('transaction-form');
