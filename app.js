@@ -127,13 +127,8 @@ function applyDateFilter() {
 
 // Reset date filter
 function resetDateFilter() {
-    const today = new Date().toISOString().split('T')[0];
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const oneMonthAgoStr = oneMonthAgo.toISOString().split('T')[0];
-    
-    startDateInput.value = oneMonthAgoStr;
-    endDateInput.value = today;
+    startDateInput.value = '';
+    endDateInput.value = '';
     
     renderCharts();
 }
@@ -142,19 +137,41 @@ function resetDateFilter() {
 function updateKPICards() {
     const filteredTransactions = filterTransactionsByDate();
     
-    const totalRevenue = filteredTransactions
+    // Calculate totals for ALL transactions (not just filtered ones)
+    const totalRevenueAll = transactions
         .filter(t => t['Income/Expense'] === 'Income')
         .reduce((sum, t) => sum + t.PGK, 0);
     
-    const totalExpenses = filteredTransactions
+    const totalExpensesAll = transactions
         .filter(t => t['Income/Expense'] === 'Expense')
         .reduce((sum, t) => sum + t.PGK, 0);
     
-    const totalProfit = totalRevenue - totalExpenses;
+    const totalProfitAll = totalRevenueAll - totalExpensesAll;
     
-    document.getElementById('total-revenue').textContent = `PGK ${totalRevenue.toFixed(2)}`;
-    document.getElementById('total-expenses').textContent = `PGK ${totalExpenses.toFixed(2)}`;
-    document.getElementById('total-profit').textContent = `PGK ${totalProfit.toFixed(2)}`;
+    // Calculate totals for FILTERED transactions
+    const totalRevenueFiltered = filteredTransactions
+        .filter(t => t['Income/Expense'] === 'Income')
+        .reduce((sum, t) => sum + t.PGK, 0);
+    
+    const totalExpensesFiltered = filteredTransactions
+        .filter(t => t['Income/Expense'] === 'Expense')
+        .reduce((sum, t) => sum + t.PGK, 0);
+    
+    const totalProfitFiltered = totalRevenueFiltered - totalExpensesFiltered;
+    
+    // Check if any date filter is applied
+    const isFilterApplied = startDateInput.value || endDateInput.value !== new Date().toISOString().split('T')[0];
+    
+    // Display appropriate totals based on whether filter is applied
+    if (isFilterApplied) {
+        document.getElementById('total-revenue').textContent = `PGK ${totalRevenueFiltered.toFixed(2)} (Filtered)`;
+        document.getElementById('total-expenses').textContent = `PGK ${totalExpensesFiltered.toFixed(2)} (Filtered)`;
+        document.getElementById('total-profit').textContent = `PGK ${totalProfitFiltered.toFixed(2)} (Filtered)`;
+    } else {
+        document.getElementById('total-revenue').textContent = `PGK ${totalRevenueAll.toFixed(2)}`;
+        document.getElementById('total-expenses').textContent = `PGK ${totalExpensesAll.toFixed(2)}`;
+        document.getElementById('total-profit').textContent = `PGK ${totalProfitAll.toFixed(2)}`;
+    }
 }
 
 // Filter transactions by date range
