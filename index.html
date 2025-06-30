@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. E. Tade Trading Ltd. - Drink Sales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>Mr. E. Tade Trading Ltd.</h1>
+        <p>Drink Sales Management System</p>
+    </header>
+
+    <main>
+        <section id="input-section">
+            <h2>Record Transaction</h2>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label for="transaction-type">Transaction Type</label>
+                    <select id="transaction-type" required>
+                        <option value="">Select type</option>
+                        <option value="Income">Income (Sale)</option>
+                        <option value="Expense">Expense (Purchase)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="account">Account</label>
+                    <select id="account" required>
+                        <option value="">Select account</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="">Select category</option>
+                        <option value="Bu Sales">Bu Sales</option>
+                        <option value="Solo Sales">Solo Sales</option>
+                        <option value="Coke Sales">Coke Sales</option>
+                        <option value="Food">Food (Purchase)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="note">Note</label>
+                    <input type="text" id="note" placeholder="Enter note (e.g., Bu_Sales)" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" min="1" step="1" value="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price per Unit (PGK)</label>
+                    <input type="number" id="price" min="0" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time</label>
+                    <input type="time" id="time" required>
+                </div>
+
+                <button type="submit">Submit Transaction</button>
+            </form>
+        </section>
+
+        <section id="dashboard-section">
+            <h2>Sales Dashboard</h2>
+            
+            <div class="dashboard-controls">
+                <div class="date-range">
+                    <label for="start-date">From:</label>
+                    <input type="date" id="start-date">
+                    <label for="end-date">To:</label>
+                    <input type="date" id="end-date">
+                    <button id="apply-filter">Apply Filter</button>
+                    <button id="reset-filter">Reset</button>
+                </div>
+            </div>
+
+            <div class="kpi-cards">
+                <div class="kpi-card">
+                    <h3>Total Revenue</h3>
+                    <p id="total-revenue">PGK 0.00</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Total Expenses</h3>
+                    <p id="total-expenses">PGK 0.00</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Total Profit</h3>
+                    <p id="total-profit">PGK 0.00</p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div id="revenue-chart" class="chart"></div>
+                <div id="profit-chart" class="chart"></div>
+                <div id="sales-by-product-chart" class="chart"></div>
+                <div id="expenses-chart" class="chart"></div>
+                <div id="payment-method-chart" class="chart"></div>
+                <div id="daily-sales-chart" class="chart"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Mr. E. Tade Trading Ltd. All rights reserved.</p>
+    </footer>
+</body>
+</html>
