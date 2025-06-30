@@ -162,16 +162,9 @@ function updateKPICards() {
     // Check if any date filter is applied
     const isFilterApplied = startDateInput.value || endDateInput.value !== new Date().toISOString().split('T')[0];
     
-    // Display appropriate totals based on whether filter is applied
-    if (isFilterApplied) {
-        document.getElementById('total-revenue').textContent = `PGK ${totalRevenueFiltered.toFixed(2)} (Filtered)`;
-        document.getElementById('total-expenses').textContent = `PGK ${totalExpensesFiltered.toFixed(2)} (Filtered)`;
-        document.getElementById('total-profit').textContent = `PGK ${totalProfitFiltered.toFixed(2)} (Filtered)`;
-    } else {
-        document.getElementById('total-revenue').textContent = `PGK ${totalRevenueAll.toFixed(2)}`;
-        document.getElementById('total-expenses').textContent = `PGK ${totalExpensesAll.toFixed(2)}`;
-        document.getElementById('total-profit').textContent = `PGK ${totalProfitAll.toFixed(2)}`;
-    }
+    document.getElementById('total-revenue').textContent = `PGK ${totalRevenueFiltered.toFixed(2)}`;
+    document.getElementById('total-expenses').textContent = `PGK ${totalExpensesFiltered.toFixed(2)}`;
+    document.getElementById('total-profit').textContent = `PGK ${totalProfitFiltered.toFixed(2)}`;
 }
 
 // Filter transactions by date range
@@ -382,7 +375,7 @@ function renderProfitChart(transactions) {
     });
 }
 
-// Sales by product chart
+// Sales by product chart - now as a column chart
 function renderSalesByProductChart(transactions) {
     const incomeTransactions = transactions.filter(t => t['Income/Expense'] === 'Income');
     
@@ -402,9 +395,12 @@ function renderSalesByProductChart(transactions) {
         color: getProductColor(product)
     }));
     
+    // Sort data by value (descending)
+    data.sort((a, b) => b.y - a.y);
+    
     Highcharts.chart('sales-by-product-chart', {
         chart: {
-            type: 'pie',
+            type: 'column',
             backgroundColor: 'transparent',
             style: {
                 fontFamily: 'Poppins, sans-serif'
@@ -416,26 +412,46 @@ function renderSalesByProductChart(transactions) {
                 color: '#ffffff'
             }
         },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: true,
-                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                    style: {
-                        color: '#ffffff'
-                    }
+        xAxis: {
+            type: 'category',
+            labels: {
+                style: {
+                    color: '#ffffff'
                 }
             }
         },
+        yAxis: {
+            title: {
+                text: 'Amount (PGK)',
+                style: {
+                    color: '#ffffff'
+                }
+            },
+            labels: {
+                style: {
+                    color: '#ffffff'
+                }
+            },
+            gridLineColor: 'rgba(255, 255, 255, 0.1)'
+        },
+        legend: {
+            enabled: false
+        },
         series: [{
             name: 'Sales',
-            colorByPoint: true,
-            data: data
+            data: data,
+            colorByPoint: true
         }],
         tooltip: {
-            valuePrefix: 'PGK '
+            headerFormat: '<span style="font-size:11px">{point.key}</span><br>',
+            pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>PGK {point.y:.2f}</b><br/>'
+        },
+        plotOptions: {
+            column: {
+                borderRadius: 5,
+                pointPadding: 0.2,
+                borderWidth: 0
+            }
         },
         credits: {
             enabled: false
@@ -589,7 +605,7 @@ function renderDailySalesChart(transactions) {
     
     Highcharts.chart('daily-sales-chart', {
         chart: {
-            type: 'line',
+            type: 'column',
             backgroundColor: 'transparent',
             style: {
                 fontFamily: 'Poppins, sans-serif'
@@ -667,8 +683,6 @@ function getExpenseColor(category) {
             return '#eb8fd8';
         case 'Coke':
             return '#ffbc3e';
-        case 'Bu Carton':
-            return '#1cc549';
         default:
             return '#f46659';
     }
