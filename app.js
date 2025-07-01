@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load transactions
     await loadTransactions();
     
-    // Initialize charts
+    // Initialize charts and KPI cards
+    updateKPICards();
     renderCharts();
     
     // Set up event listeners
@@ -91,6 +92,12 @@ async function login() {
     }
 }
 
+// Logout function
+function logout() {
+    localStorage.removeItem('token');
+    showLoginForm();
+}
+
 // Load transactions from API
 async function loadTransactions() {
     const token = localStorage.getItem('token');
@@ -108,7 +115,9 @@ async function loadTransactions() {
         if (!response.ok) throw new Error('Failed to fetch transactions');
         
         transactions = await response.json();
+        console.log('Loaded transactions:', transactions); // Debugging
         updateKPICards();
+        renderCharts();
     } catch (error) {
         console.error('Error loading transactions:', error);
         if (error.message.includes('401')) {
@@ -139,6 +148,12 @@ async function handleTransactionSubmit(e) {
         'Income/Expense': document.getElementById('transaction-type').value,
         PGK: parseFloat(document.getElementById('price').value) * parseFloat(document.getElementById('quantity').value)
     };
+    
+    // Validate inputs
+    if (!transaction.Date || !transaction.Account || !transaction.Category || isNaN(transaction.Quantity) || isNaN(transaction.PGK)) {
+        alert('Please fill in all required fields with valid values.');
+        return;
+    }
     
     try {
         const response = await fetch(`${API_BASE_URL}/transactions`, {
@@ -203,55 +218,72 @@ function showLoginForm() {
 
 // Apply date filter
 function applyDateFilter() {
+    const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+    const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+
+    // Validate date range
+    if (startDate && endDate && startDate > endDate) {
+        alert('Start date cannot be after end date.');
+        return;
+    }
+
+    updateKPICards();
     renderCharts();
+    alert('Date filter applied successfully.');
 }
 
 // Reset date filter
 function resetDateFilter() {
-    startDateInput.value = '';
-    endDateInput.value = '';
+    const today = new Date().toISOString().split('T')[0];
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const oneMonthAgoStr = oneMonthAgo.toISOString().split('T')[0];
     
+    startDateInput.value = oneMonthAgoStr;
+    endDateInput.value = today;
+    
+    updateKPICards();
     renderCharts();
+    alert('Date filter reset to default (last 30 days).');
 }
 
 // Update KPI cards
 function updateKPICards() {
     const filteredTransactions = filterTransactionsByDate();
     
-    // Calculate totals for ALL transactions (not just filtered ones)
-    const totalRevenueAll = transactions
-        .filter(t => t['Income/Expense'] === 'Income')
-        .reduce((sum, t) => sum + t.PGK, 0);
-    
-    const totalExpensesAll = transactions
-        .filter(t => t['Income/Expense'] === 'Expense')
-        .reduce((sum, t) => sum + t.PGK, 0);
-    
-    const totalProfitAll = totalRevenueAll - totalExpensesAll;
-    
     // Calculate totals for FILTERED transactions
     const totalRevenueFiltered = filteredTransactions
         .filter(t => t['Income/Expense'] === 'Income')
-        .reduce((sum, t) => sum + t.PGK, 0);
+        .reduce((sum, t) => sum + (t.PGK || 0), 0) || 0;
     
     const totalExpensesFiltered = filteredTransactions
         .filter(t => t['Income/Expense'] === 'Expense')
-        .reduce((sum, t) => sum + t.PGK, 0);
+        .reduce((sum, t) => sum + (t.PGK || 0), 0) || 0;
     
     const totalProfitFiltered = totalRevenueFiltered - totalExpensesFiltered;
     
-    // Check if any date filter is applied
-    const isFilterApplied = startDateInput.value || endDateInput.value !== new Date().toISOString().split('T')[0];
-    
+    // Update KPI cards with formatted values
+    const profitElement = document.getElementById('total-profit');
     document.getElementById('total-revenue').textContent = `PGK ${totalRevenueFiltered.toFixed(2)}`;
     document.getElementById('total-expenses').textContent = `PGK ${totalExpensesFiltered.toFixed(2)}`;
-    document.getElementById('total-profit').textContent = `PGK ${totalProfitFiltered.toFixed(2)}`;
+    profitElement.textContent = `PGK ${totalProfitFiltered.toFixed(2)}`;
+    profitElement.classList.toggle('negative', totalProfitFiltered < 0);
 }
 
 // Filter transactions by date range
 function filterTransactionsByDate() {
     const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
     const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+    
+    // Validate date inputs
+    if (startDateInput.value && isNaN(startDate.getTime())) {
+        alert('Invalid start date');
+        return transactions;
+    }
+    if (endDateInput.value && isNaN(endDate.getTime())) {
+        alert('Invalid end date');
+        return transactions;
+    }
     
     return transactions.filter(transaction => {
         const transactionDateParts = transaction.Date.split('/');
@@ -277,11 +309,12 @@ function renderCharts() {
     renderInventoryChart(filteredTransactions);
 }
 
+// [Rest of the chart functions remain unchanged...]
+
 // Revenue chart
 function renderRevenueChart(transactions) {
     const incomeTransactions = transactions.filter(t => t['Income/Expense'] === 'Income');
     
-    // Group by month
     const monthlyRevenue = {};
     incomeTransactions.forEach(t => {
         const dateParts = t.Date.split('/');
@@ -357,7 +390,6 @@ function renderProfitChart(transactions) {
     const incomeTransactions = transactions.filter(t => t['Income/Expense'] === 'Income');
     const expenseTransactions = transactions.filter(t => t['Income/Expense'] === 'Expense');
     
-    // Group by month with proper month names
     const monthlyIncome = {};
     const monthlyExpenses = {};
     
@@ -396,7 +428,6 @@ function renderProfitChart(transactions) {
     const expensesData = categories.map(month => monthlyExpenses[month] || 0);
     const profitData = categories.map((month, i) => incomeData[i] - expensesData[i]);
     
-    // Calculate profit margins
     const marginData = categories.map((month, i) => {
         const income = incomeData[i] || 0;
         const profit = profitData[i] || 0;
